@@ -18,7 +18,7 @@ data class Message private constructor(
 
         fun parse(msg: String): Message {
             if (msg.startsWith("PING :")) {
-                return Message(null, "@SERVER", Command.PING, "@SELF", msg.split(" ")[1].drop(1))
+                return Message(null, "", Command.PING, null, msg.split(" ")[1].drop(1))
             }
 
             val matcher = msgPattern.matcher(msg)

@@ -13,7 +13,12 @@ class TagCompound private constructor(
 
     val tags: Map<Tag, String?> by lazy {
         try {
-            raw.split(";").associate { val pair = it.split("="); Pair(Tag.getTag(pair[0]), pair.getOrNull(1)) }
+            raw.split(";")
+                    .map {
+                        val split = it.split("=")
+                        Pair(split.first(), split.getOrNull(1))
+                    }
+                    .associate { Tag.getTag(it.first) to if (it.second?.isBlank() == true) null else it.second }
         } catch (e: Exception) {
             System.err.println(raw)
             e.printStackTrace()
@@ -21,13 +26,13 @@ class TagCompound private constructor(
         }
     }
 
-    enum class Badge {ADMIN, BITS, BROADCASTER, GLOBAL_MOD, MODERATOR, SUBSCRIBER, STAFF, TURBO}
     val badges: List<Pair<Badge, Int>>? by lazy {
-        tags[Tag.BITS]
+        tags[Tag.BADGES]
                 ?.split(",")
+                ?.filter { !it.isBlank() }
                 ?.map {
-                    val split = it.split("/");
-                    Pair(Badge.valueOf(it.toUpperCase()), split.getOrNull(1)?.toInt() ?: 0)
+                    val split = it.split("/")
+                    Pair(Badge.valueOf(split.first().toUpperCase()), split.getOrNull(1)?.toInt() ?: 0)
                 }
     }
 
@@ -36,7 +41,7 @@ class TagCompound private constructor(
     }
 
     val banReason: String? by lazy {
-        tags[Tag.BAN_REASON]
+        tags[Tag.BAN_REASON]?.spaceEscapedToNormal()
     }
 
     val bits: Int? by lazy {
@@ -49,6 +54,7 @@ class TagCompound private constructor(
 
     // TODO: 25.05.2018 Maybe replace with own wrapper class
     val color: Color? by lazy {
+        println(tags[Tag.COLOR])
         tags[Tag.COLOR]?.let { Color.valueOf(it) }
     }
 
@@ -58,14 +64,15 @@ class TagCompound private constructor(
 
     // TODO: 25.05.2018 Replace with emote class ?
     // TODO: 25.05.2018 Some Cleanup?
-    val emote: Map<Int, List<IntRange>>? by lazy {
+    val emotes: Map<Int, List<IntRange>>? by lazy {
         tags[Tag.EMOTES]
                 ?.split("/")
+                ?.filter { !it.isBlank() }
                 ?.associate {
                     // emoteID:r1-r2,r3-r4
                     val split = it.split(":")
                     split[0].toInt() to
-                            split[2]
+                            split[1]
                                     .split(",")
                                     .map {
                                         val range = it.split("-");
@@ -92,12 +99,6 @@ class TagCompound private constructor(
         tags[Tag.MOD]?.let { it == "1" }
     }
 
-    enum class NoticeType {
-        // tag
-        SUB, RESUB, SUBGIFT, RAID, RITUAL,
-        // system
-        ALREADY_BANNED, ALREADY_EMOTE_ONLY_OFF, ALREADY_EMOTE_ONLY_ON, ALREADY_R9K_OFF, ALREADY_R9K_ON, BAN_SUCCESS, BAD_UNBAN_NO_BAN, EMOTE_ONLY_OFF, EMOTE_ONLY_ON, MSG_CHANNEL_SUSPENDED, MSG_ROOM_NOT_FOUND, NO_PERMISSION, R9K_OFF, R9K_ON, SLOW_OFF, SLOW_ON, TIMEOUT_SUCCESS, UNBAN_SUCCESS, UNRECOGNIZED_CMD, UNSUPPORTED_CHATROOMS_CMD;
-    }
     val msgId: NoticeType? by lazy {
         tags[Tag.MSG_ID]?.let { NoticeType.valueOf(it.toUpperCase()) }
     }
@@ -106,8 +107,8 @@ class TagCompound private constructor(
         tags[Tag.R9K]?.let { it == "1" }
     }
 
-    val roomId: Int? by lazy {
-        tags[Tag.ROOM_ID]?.toInt()
+    val roomId: Long? by lazy {
+        tags[Tag.ROOM_ID]?.toLong()
     }
 
     val slow: Duration? by lazy {
@@ -123,15 +124,15 @@ class TagCompound private constructor(
     }
 
     val systemMessage: String? by lazy {
-        tags[Tag.SYSTEM_MSG]
+        tags[Tag.SYSTEM_MSG]?.spaceEscapedToNormal()
     }
 
-    val sentTS: Long? by lazy {
+    val tmiSentTS: Long? by lazy {
         tags[Tag.TMI_SENT_TS]?.toLong()
     }
 
-    val sentLocalDateTime: LocalDateTime? by lazy {
-        sentTS?.let {
+    val tmiSentLocalDateTime: LocalDateTime? by lazy {
+        tmiSentTS?.let {
             Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDateTime()
         }
     }
@@ -140,13 +141,12 @@ class TagCompound private constructor(
         tags[Tag.TURBO]?.let { it == "1" }
     }
 
-    val userId: Int? by lazy {
-        tags[Tag.USER_ID]?.toInt()
+    val userId: Long? by lazy {
+        tags[Tag.USER_ID]?.toLong()
     }
 
-    enum class UserType { EMPTY, MOD, GLOBAL_MOD, ADMIN, STAFF }
     val userType: UserType? by lazy {
-        tags[Tag.USER_TYPE]?.let { UserType.valueOf(it.toUpperCase()) }
+        tags[Tag.USER_TYPE]?.let { UserType.getUserType(it) }
     }
 
     val paramDisplayName: String? by lazy {
@@ -165,30 +165,24 @@ class TagCompound private constructor(
         tags[Tag.MSG_PARAM_RECIPIENT_DISPLAY_NAME]
     }
 
-    val paramRecipientId: Int? by lazy {
-        tags[Tag.MSG_PARAM_RECIPIENT_ID]?.toInt()
+    val paramRecipientId: Long? by lazy {
+        tags[Tag.MSG_PARAM_RECIPIENT_ID]?.toLong()
     }
 
-    val paramRecipientUserName: String? by lazy {
-        tags[Tag.MSG_PARAM_RECIPIENT_USER_NAME]
+    val paramRecipientName: String? by lazy {
+        tags[Tag.MSG_PARAM_RECIPIENT_NAME]
     }
 
-    enum class SubPlan {
-        PRIME, _1000, _2000, _3000;
-        companion object {
-            val numberRegex = Regex("""[0-9]+""")
-            fun getPlan(plan: String): SubPlan {
-                val pre = if (plan.matches(numberRegex)) "_" else ""
-                return SubPlan.valueOf(pre + plan)
-            }
-        }
-    }
+//    val paramRecipientUserName: String? by lazy {
+//        tags[Tag.MSG_PARAM_RECIPIENT_USER_NAME]
+//    }
+
     val paramSubPlan: SubPlan? by lazy {
         tags[Tag.MSG_PARAM_SUB_PLAN]?.let { SubPlan.getPlan(it) }
     }
 
     val paramSubPlanName: String? by lazy {
-        tags[Tag.MSG_PARAM_SUB_PLAN_NAME]
+        tags[Tag.MSG_PARAM_SUB_PLAN_NAME]?.spaceEscapedToNormal()
     }
 
     val paramViewerCount: Int? by lazy {
@@ -197,6 +191,10 @@ class TagCompound private constructor(
 
     val paramRitualName: String? by lazy {
         tags[Tag.MSG_PARAM_RITUAL_NAME]
+    }
+
+    val paramSenderCount: Int? by lazy {
+        tags[Tag.MSG_PARAM_SENDER_COUNT]?.toInt()
     }
 
     val emoteOnly: Boolean? by lazy {
@@ -212,12 +210,16 @@ class TagCompound private constructor(
         tags[Tag.RITUALS]?.let { it == "1" }
     }
 
-    val targetUserId: Int? by lazy {
-        tags[Tag.TARGET_USER_ID]?.toInt()
+    val targetUserId: Long? by lazy {
+        tags[Tag.TARGET_USER_ID]?.toLong()
     }
 
     val targetMsgId: String? by lazy {
         tags[Tag.TARGET_MSG_ID]
+    }
+
+    val threadId: String? by lazy {
+        tags[Tag.THREAD_ID]
     }
 
     companion object {
@@ -225,5 +227,41 @@ class TagCompound private constructor(
             return TagCompound(raw)
         }
     }
+}
 
+enum class Badge {
+    ADMIN, BITS, BROADCASTER, GLOBAL_MOD, MODERATOR, SUBSCRIBER, STAFF, TURBO, PREMIUM
+}
+
+enum class NoticeType {
+    // tag
+    SUB, RESUB, SUBGIFT, RAID, RITUAL,
+    // system
+    ALREADY_BANNED, ALREADY_EMOTE_ONLY_OFF, ALREADY_EMOTE_ONLY_ON, ALREADY_R9K_OFF, ALREADY_R9K_ON, ALREADY_SUBS_OFF, ALREADY_SUBS_ON, BAD_HOST_HOSTING, BAN_SUCCESS, BAD_UNBAN_NO_BAN, EMOTE_ONLY_OFF, EMOTE_ONLY_ON, HOST_OFF, HOST_ON, HOSTS_REMAINING, MSG_CHANNEL_SUSPENDED, R9K_OFF, R9K_ON, SLOW_OFF, SLOW_ON, SUBS_OFF, SUBS_ON, TIMEOUT_SUCCESS, UNBAN_SUCCESS, UNRECOGNIZED_CMD;
+}
+
+enum class UserType {
+    EMPTY, MOD, GLOBAL_MOD, ADMIN, STAFF;
+
+    companion object {
+        fun getUserType(type: String): UserType {
+            return if (type.isBlank()) EMPTY
+            else valueOf(type.toUpperCase())
+        }
+    }
+}
+
+enum class SubPlan {
+    PRIME, _1000, _2000, _3000;
+    companion object {
+        val numberRegex = Regex("""[0-9]+""")
+        fun getPlan(plan: String): SubPlan {
+            val pre = if (plan.matches(numberRegex)) "_" else ""
+            return SubPlan.valueOf(pre + plan.toUpperCase())
+        }
+    }
+}
+
+fun String.spaceEscapedToNormal(): String {
+    return this.replace("\\s", " ")
 }
