@@ -112,7 +112,7 @@ class StreamRequest private constructor(
                     userIds.map { it.toString() }.toTypedArray(),
                     userLogins,
                     amount
-                )
+            )
         }
 
         fun ofTop(amount: Int = 20): StreamRequest {

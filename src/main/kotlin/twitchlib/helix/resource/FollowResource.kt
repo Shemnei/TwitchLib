@@ -4,7 +4,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import twitchlib.helix.HelixClient
 import java.net.URL
-import java.time.temporal.TemporalAmount
 
 
 class FollowResource(
