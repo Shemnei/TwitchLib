@@ -1,2 +1,23 @@
 TMI:
     Correctly Identify - ROOMSTATE #chatrooms:<channel ID>:<room UUID>:<message>
+
+HELIX:
+    if connection fails check https://devstatus.twitch.tv/
+
+    Free:
+        https://api.twitch.tv/helix/clips
+        https://api.twitch.tv/helix/games
+        https://api.twitch.tv/helix/games/top
+        https://api.twitch.tv/helix/streams
+        https://api.twitch.tv/helix/users
+        https://api.twitch.tv/helix/users/follows?from_id=<user ID>
+        https://api.twitch.tv/helix/users/follows?to_id=<user ID>
+        https://api.twitch.tv/helix/videos
+
+        ?https://api.twitch.tv/helix/streams/metadata
+        ?https://api.twitch.tv/helix/entitlements/upload
+
+    Handle Ratelimit Headers
+    Request/Respones unify List/Array
+    maybe unify names
+    StreamMetadata / Entitlement
