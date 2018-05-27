@@ -3,17 +3,20 @@ package twitchlib.helix.resource
 import org.json.JSONArray
 import org.json.JSONObject
 import twitchlib.helix.HelixClient
+import twitchlib.util.JsonModel
+import twitchlib.util.json
 import java.net.URL
+import java.net.URLEncoder
 
 class GameResource(
         private val client: HelixClient
 ) {
-    fun getGames(req: GameRequest): List<Game> {
+    fun getGames(req: GameRequest): SimpleGameResponse {
         val url = URL("""https://api.twitch.tv/helix/games?${req.query}""")
         val body = client.requestAuthorized(url)
 
-        val data = JSONObject(body).getJSONArray("data")
-        return parseGames(data)
+        val data = JSONObject(body)
+        return SimpleGameResponse(data)
     }
 
     fun getTopGames(amount: Int = 20, cursor: ResourceCursor? = null): GameResponse {
@@ -26,23 +29,8 @@ class GameResource(
         val body = client.requestAuthorized(url)
 
         val jObj = JSONObject(body)
-        val nextCursor = jObj.getJSONObject("pagination").getString("cursor")
-        val data = jObj.getJSONArray("data")
-        val games = parseGames(data)
-
-        return GameResponse(games, nextCursor)
+        return GameResponse(jObj)
     }
-
-    private fun parseGames(data: JSONArray): List<Game> {
-        return data.map {
-            val d = it as JSONObject
-            val id = d.getString("id")
-            val name = d.getString("name")
-            val boxArtUrl = d.getString("box_art_url")
-            Game(id, name, boxArtUrl)
-        }
-    }
-
 }
 
 class GameRequest private constructor(
@@ -61,7 +49,9 @@ class GameRequest private constructor(
         if (ids.isNotEmpty())
             idStrings.add(ids.joinToString("&id=", prefix = "id="))
         if (names.isNotEmpty())
-            idStrings.add(names.joinToString("&name=", prefix = "name="))
+            idStrings.add(names.joinToString("&name=", prefix = "name=") {
+                URLEncoder.encode(it, "utf-8")
+            })
         idStrings.joinToString("&")
     }
 
@@ -80,15 +70,16 @@ class GameRequest private constructor(
     }
 }
 
-class Game(
-        _id: String,
-        val name: String,
-        val boxArtUrl: String
-) {
-    val id: Long = _id.toLong()
+class Game(override val root: JSONObject) : JsonModel {
+    val id: Long by json { it.toString().toLong() }
+    val name: String by json()
+    val boxArtUrl: String by json("box_art_url")
 }
 
-data class GameResponse(
-        val games: List<Game>,
-        val cursor: String
-)
+open class SimpleGameResponse(override val root: JSONObject) : JsonModel {
+    val games: List<Game> by json("data")
+}
+
+class GameResponse(override val root: JSONObject) : JsonModel, SimpleGameResponse(root) {
+    val pagination: Pagination by json()
+}

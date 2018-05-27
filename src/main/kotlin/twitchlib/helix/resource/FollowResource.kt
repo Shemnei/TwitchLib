@@ -3,6 +3,9 @@ package twitchlib.helix.resource
 import org.json.JSONArray
 import org.json.JSONObject
 import twitchlib.helix.HelixClient
+import twitchlib.util.JsonModel
+import twitchlib.util.json
+import twitchlib.util.toSystemDateTime
 import java.net.URL
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -17,24 +20,8 @@ class FollowResource(
         val body = client.requestAuthorized(url)
 
         val jObj = JSONObject(body)
-        val data = jObj.getJSONArray("data")
-        val total = jObj.getLong("total")
-        val cursor = jObj.getJSONObject("pagination").getString("cursor")
-        val follows = parseFollows(data)
-
-        return FollowResponse(total, follows, cursor)
+        return FollowResponse(jObj)
     }
-
-    private fun parseFollows(data: JSONArray): List<Follow> {
-        return data.map {
-            val d = it as JSONObject
-            val fromUserId = d.getString("from_id")
-            val toUserId = d.getString("to_id")
-            val followedAt = d.getString("followed_at")
-            Follow(fromUserId, toUserId, followedAt)
-        }
-    }
-
 }
 
 class FollowRequest private constructor(
@@ -73,20 +60,16 @@ class FollowRequest private constructor(
     }
 }
 
-class Follow(
-        _fromUserId: String,
-        _toUserId: String,
-        _followedAt: String
-) {
-    val fromUserId: Long = _fromUserId.toLong()
-    val toUserId: Long = _toUserId.toLong()
-    val followedAt: LocalDateTime by lazy {
-        LocalDateTime.ofInstant(ZonedDateTime.parse(_followedAt).toInstant(), ZoneId.systemDefault())
+class Follow(override val root: JSONObject) : JsonModel {
+    val fromUserId: Long by json("from_id") { it.toString().toLong() }
+    val toUserId: Long by json("to_id") { it.toString().toLong() }
+    val followedAt: LocalDateTime by json("followed_at") {
+        ZonedDateTime.parse(it.toString()).toSystemDateTime()
     }
 }
 
-data class FollowResponse(
-        val total: Long,
-        val follows: List<Follow>,
-        val cursor: String
-)
+data class FollowResponse(override val root: JSONObject) : JsonModel {
+    val total: Long by json()
+    val follows: List<Follow> by json("data")
+    val pagination: Pagination by json()
+}

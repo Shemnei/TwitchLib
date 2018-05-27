@@ -3,35 +3,20 @@ package twitchlib.helix.resource
 import org.json.JSONArray
 import org.json.JSONObject
 import twitchlib.helix.HelixClient
+import twitchlib.util.JsonModel
+import twitchlib.util.json
 import java.net.URL
 
 class UserResource(
         private val client: HelixClient
 ) {
-    fun getUsers(req: UserRequest): List<User> {
+    fun getUsers(req: UserRequest): UserResponse {
         val url = URL("""https://api.twitch.tv/helix/users?${req.query}""")
         val body = client.requestAuthorized(url)
 
-        val data = JSONObject(body).getJSONArray("data")
-        return parseUsers(data)
+        val data = JSONObject(body)
+        return UserResponse(data)
     }
-
-    private fun parseUsers(data: JSONArray): List<User> {
-        return data.map {
-            val d = it as JSONObject
-            val id = d.getString("id")
-            val login = d.getString("login")
-            val displayName = d.getString("display_name")
-            val type = d.getString("type")
-            val broadcasterType = d.getString("broadcaster_type")
-            val description = d.getString("description")
-            val profileImageUrl = d.getString("profile_image_url")
-            val offlineImageUrl = d.getString("offline_image_url")
-            val view_count = d.getLong("view_count")
-            User(id, login, displayName, type, broadcasterType, description, profileImageUrl, offlineImageUrl, view_count)
-        }
-    }
-
 }
 
 class UserRequest private constructor(
@@ -69,16 +54,18 @@ class UserRequest private constructor(
     }
 }
 
-class User(
-        _id: String,
-        val login: String,
-        val displayName: String,
-        val type: String,
-        val broadcasterType: String,
-        val description: String,
-        val profileImageUrl: String,
-        val offlineImageUrl: String,
-        val view_count: Long
-) {
-    val id: Long = _id.toLong()
+class User(override val root: JSONObject) : JsonModel {
+    val id: Long by json { it.toString().toLong() }
+    val login: String by json()
+    val displayName: String by json("display_name")
+    val type: String by json()
+    val broadcasterType: String by json("broadcaster_type")
+    val description: String by json()
+    val profileImageUrl: String by json("profile_image_url")
+    val offlineImageUrl: String by json("offline_image_url")
+    val viewCount: Long by json("view_count")
+}
+
+class UserResponse(override val root: JSONObject) : JsonModel {
+    val users: List<User> by json("data")
 }

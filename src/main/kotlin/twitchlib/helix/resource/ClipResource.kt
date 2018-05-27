@@ -3,6 +3,9 @@ package twitchlib.helix.resource
 import org.json.JSONArray
 import org.json.JSONObject
 import twitchlib.helix.HelixClient
+import twitchlib.util.JsonModel
+import twitchlib.util.json
+import twitchlib.util.toSystemDateTime
 import java.net.URL
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -16,13 +19,8 @@ class ClipResource(
         val url = URL("""https://api.twitch.tv/helix/clips?${req.query}""")
         val body = client.requestAuthorized(url)
 
-
         val jObj = JSONObject(body)
-        val data = jObj.getJSONArray("data")
-        val clips = parseClips(data)
-        val cursor = jObj.getJSONObject("pagination").getString("cursor")
-
-        return ClipResponse(clips, cursor)
+        return ClipResponse(jObj)
     }
 
     fun getClips(cursor: ResourceCursor): ClipResponse {
@@ -30,35 +28,8 @@ class ClipResource(
         val body = client.requestAuthorized(url)
 
         val jObj = JSONObject(body)
-        val data = jObj.getJSONArray("data")
-        val clips = parseClips(data)
-        val newCursor = jObj.getJSONObject("pagination").getString("cursor")
-
-        return ClipResponse(clips, newCursor)
+        return ClipResponse(jObj)
     }
-
-    private fun parseClips(data: JSONArray): List<Clip> {
-        return data.map {
-            val d = it as JSONObject
-            val id = d.getString("id")
-            val url = d.getString("url")
-            val embedUrl = d.getString("embed_url")
-            val broadcasterId = d.getString("broadcaster_id")
-            val creatorId = d.getString("creator_id")
-            val videoId = d.getString("video_id")
-            val gameId = d.getString("game_id")
-            val language = d.getString("language")
-            val title = d.getString("title")
-            val viewCount = d.getLong("view_count")
-            val createdAt = d.getString("created_at")
-            val thumbnailUrl = d.getString("thumbnail_url")
-            Clip(
-                    id, url, embedUrl, broadcasterId, creatorId, videoId,
-                    gameId, language, title, viewCount, createdAt, thumbnailUrl
-            )
-        }
-    }
-
 }
 
 enum class ClipIdType {
@@ -76,7 +47,7 @@ class ClipRequest private constructor(
     }
 
     val query: String by lazy {
-        "${type.name.toLowerCase()}=$id?first=$amount"
+        "${type.name.toLowerCase()}=$id&first=$amount"
     }
 
     companion object {
@@ -94,31 +65,24 @@ class ClipRequest private constructor(
     }
 }
 
-class Clip(
-        val id: String,
-        val url: String,
-        val embedUrl: String,
-        _broadcasterId: String,
-        _creatorId: String,
-        _videoId: String,
-        _gameId: String,
-        _language: String,
-        val title: String,
-        val viewCount: Long,
-        _createdAt: String,
-        val thumbnailUrl: String
-) {
-    val broadcasterId: Long = _broadcasterId.toLong()
-    val creatorId: Long = _creatorId.toLong()
-    val videoId: Long? = if (_videoId.isBlank()) null else _videoId.toLong()
-    val gameId: Long = _gameId.toLong()
-    val language: Locale by lazy { Locale(_language) }
-    val createdAt: LocalDateTime by lazy {
-        LocalDateTime.ofInstant(ZonedDateTime.parse(_createdAt).toInstant(), ZoneId.systemDefault())
+class Clip(override val root: JSONObject) : JsonModel {
+    val id: String by json()
+    val url: String by json()
+    val embedUrl: String  by json("embed_url")
+    val broadcasterId: Long by json("broadcaster_id") { it.toString().toLong() }
+    val creatorId: Long by json("creator_id") { it.toString().toLong() }
+    val videoId: String by json("video_id")
+    val gameId: Long by json("game_id") { it.toString().toLong() }
+    val language: Locale by json { Locale(it.toString()) }
+    val title: String by json()
+    val viewCount: Long by json("view_count")
+    val createdAt: LocalDateTime by json("created_at") {
+        ZonedDateTime.parse(it.toString()).toSystemDateTime()
     }
+    val thumbnailUrl: String by json("thumbnail_url")
 }
 
-data class ClipResponse(
-        val clips: List<Clip>,
-        val cursor: String
-)
+class ClipResponse(override val root: JSONObject) : JsonModel {
+    val clips: List<Clip> by json("data")
+    val pagination: Pagination by json()
+}

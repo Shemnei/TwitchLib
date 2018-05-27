@@ -3,6 +3,9 @@ package twitchlib.helix.resource
 import org.json.JSONArray
 import org.json.JSONObject
 import twitchlib.helix.HelixClient
+import twitchlib.util.JsonModel
+import twitchlib.util.json
+import twitchlib.util.toSystemDateTime
 import java.net.URL
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -17,11 +20,7 @@ class StreamResource(
         val body = client.requestAuthorized(url)
 
         val jObj = JSONObject(body)
-        val data = jObj.getJSONArray("data")
-        val cursor = jObj.getJSONObject("pagination").getString("cursor")
-        val streams = parseStreams(data)
-
-        return StreamResponse(streams, cursor)
+        return StreamResponse(jObj)
     }
 
     fun getStreams(cursor: ResourceCursor): StreamResponse {
@@ -29,28 +28,7 @@ class StreamResource(
         val body = client.requestAuthorized(url)
 
         val jObj = JSONObject(body)
-        val data = jObj.getJSONArray("data")
-        val newCursor = jObj.getJSONObject("pagination").getString("cursor")
-        val streams = parseStreams(data)
-
-        return StreamResponse(streams, newCursor)
-    }
-
-    private fun parseStreams(data: JSONArray): List<Stream> {
-        return data.map {
-            val d = it as JSONObject
-            val id = d.getString("id")
-            val userId = d.getString("user_id")
-            val gameId = d.getString("game_id")
-            val communityIds = d.getJSONArray("community_ids").map { it.toString() }
-            val type = d.getString("type")
-            val title = d.getString("title")
-            val viewCount = d.getLong("viewer_count")
-            val startedAt = d.getString("started_at")
-            val language = d.getString("language")
-            val thumbnailUrl = d.getString("thumbnail_url")
-            Stream(id, userId, gameId, communityIds, type, title, viewCount, startedAt, language, thumbnailUrl)
-        }
+        return StreamResponse(jObj)
     }
 }
 
@@ -69,7 +47,7 @@ class StreamRequest private constructor(
 
     init {
         if (amount > 100 || amount < 1)
-            throw IllegalArgumentException("Amount can be in [0-100], was $amount")
+            throw IllegalArgumentException("Amount can be in [1-100], was $amount")
         val idAmount = communityIds.size + gameIds.size + languages.size + userIds.size + userLogins.size
         if (idAmount > 100)
             throw IllegalArgumentException("Amount of overall ids must be in [0-100], was $idAmount")
@@ -141,29 +119,22 @@ enum class StreamState {
     ONLINE, OFFLINE, ERROR
 }
 
-class Stream(
-        _id: String,
-        _userId: String,
-        _gameId: String,
-        val communityIds: List<String>,
-        _type: String,
-        val title: String,
-        val viewCount: Long,
-        _startedAt: String,
-        _language: String,
-        val thumbnailUrl: String
-) {
-    val id: Long = _id.toLong()
-    val userId: Long = _userId.toLong()
-    val gameId: Long = _gameId.toLong()
-    val state: StreamState = if (_type == "live") StreamState.ONLINE else StreamState.ERROR
-    val language: Locale by lazy { Locale(_language) }
-    val startedAt: LocalDateTime by lazy {
-        LocalDateTime.ofInstant(ZonedDateTime.parse(_startedAt).toInstant(), ZoneId.systemDefault())
+class Stream(override val root: JSONObject) : JsonModel{
+    val id: Long by json { it.toString().toLong() }
+    val userId: Long by json("user_id") { it.toString().toLong() }
+    val gameId: Long by json("game_id") { it.toString().toLong() }
+    val communityIds: List<String> by json("community_ids")
+    val state: StreamState by json("type") { if (it.toString() == "live") StreamState.ONLINE else StreamState.ERROR }
+    val title: String by json()
+    val viewerCount: Long by json("viewer_count")
+    val language: Locale by json { Locale(it.toString()) }
+    val startedAt: LocalDateTime by json("started_at") {
+        ZonedDateTime.parse(it.toString()).toSystemDateTime()
     }
+    val thumbnailUrl: String by json("thumbnail_url")
 }
 
-data class StreamResponse(
-        val streams: List<Stream>,
-        val cursor: String
-)
+class StreamResponse(override val root: JSONObject) : JsonModel {
+    val streams: List<Stream> by json("data")
+    val pagination: Pagination by json()
+}
