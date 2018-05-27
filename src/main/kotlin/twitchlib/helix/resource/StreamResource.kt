@@ -4,6 +4,10 @@ import org.json.JSONArray
 import org.json.JSONObject
 import twitchlib.helix.HelixClient
 import java.net.URL
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.util.*
 
 class StreamResource(
         private val client: HelixClient
@@ -20,14 +24,26 @@ class StreamResource(
         return StreamResponse(streams, cursor)
     }
 
+    fun getStreams(cursor: ResourceCursor): StreamResponse {
+        val url = URL("""https://api.twitch.tv/helix/streams?${cursor.query}""")
+        val body = client.requestAuthorized(url)
+
+        val jObj = JSONObject(body)
+        val data = jObj.getJSONArray("data")
+        val newCursor = jObj.getJSONObject("pagination").getString("cursor")
+        val streams = parseStreams(data)
+
+        return StreamResponse(streams, newCursor)
+    }
+
     private fun parseStreams(data: JSONArray): List<Stream> {
         return data.map {
             val d = it as JSONObject
             val id = d.getString("id")
-            val userId = d.getString("user_id").toLong()
-            val gameId = d.getString("game_id").toLong()
+            val userId = d.getString("user_id")
+            val gameId = d.getString("game_id")
             val communityIds = d.getJSONArray("community_ids").map { it.toString() }
-            val type = if (d.getString("type") == "live") StreamState.ONLINE else StreamState.ERROR
+            val type = d.getString("type")
             val title = d.getString("title")
             val viewCount = d.getLong("viewer_count")
             val startedAt = d.getString("started_at")
@@ -62,15 +78,15 @@ class StreamRequest private constructor(
     val query: String by lazy {
         val idStrings = mutableListOf<String>()
         if (communityIds.isNotEmpty())
-            idStrings.add("community_id=" + communityIds.joinToString("%20"))
+            idStrings.add(communityIds.joinToString("&community_id=", prefix = "community_id="))
         if (gameIds.isNotEmpty())
-            idStrings.add("game_id=" + gameIds.joinToString("%20"))
+            idStrings.add(gameIds.joinToString("&game_id=", prefix = "game_id="))
         if (languages.isNotEmpty())
-            idStrings.add("language=" + languages.joinToString("%20"))
+            idStrings.add(languages.joinToString("&language=", prefix = "language="))
         if (userIds.isNotEmpty())
-            idStrings.add("user_id=" + userIds.joinToString("%20"))
+            idStrings.add(userIds.joinToString("&user_id=", prefix = "user_id="))
         if (userLogins.isNotEmpty())
-            idStrings.add("user_login=" + userLogins.joinToString("%20"))
+            idStrings.add(userLogins.joinToString("&user_login=", prefix = "user_login="))
         idStrings.add("first=$amount")
         idStrings.joinToString("&")
     }
@@ -125,18 +141,27 @@ enum class StreamState {
     ONLINE, OFFLINE, ERROR
 }
 
-data class Stream(
-        val id: String,
-        val userId: Long,
-        val gameId: Long,
+class Stream(
+        _id: String,
+        _userId: String,
+        _gameId: String,
         val communityIds: List<String>,
-        val type: StreamState,
+        _type: String,
         val title: String,
         val viewCount: Long,
-        val startedAt: String,
-        val language: String,
+        _startedAt: String,
+        _language: String,
         val thumbnailUrl: String
-)
+) {
+    val id: Long = _id.toLong()
+    val userId: Long = _userId.toLong()
+    val gameId: Long = _gameId.toLong()
+    val state: StreamState = if (_type == "live") StreamState.ONLINE else StreamState.ERROR
+    val language: Locale by lazy { Locale(_language) }
+    val startedAt: LocalDateTime by lazy {
+        LocalDateTime.ofInstant(ZonedDateTime.parse(_startedAt).toInstant(), ZoneId.systemDefault())
+    }
+}
 
 data class StreamResponse(
         val streams: List<Stream>,

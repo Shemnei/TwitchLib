@@ -4,6 +4,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 import twitchlib.helix.HelixClient
 import java.net.URL
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 
 class FollowResource(
@@ -25,8 +28,8 @@ class FollowResource(
     private fun parseFollows(data: JSONArray): List<Follow> {
         return data.map {
             val d = it as JSONObject
-            val fromUserId = d.getLong("from_id")
-            val toUserId = d.getLong("to_id")
+            val fromUserId = d.getString("from_id")
+            val toUserId = d.getString("to_id")
             val followedAt = d.getString("followed_at")
             Follow(fromUserId, toUserId, followedAt)
         }
@@ -70,11 +73,17 @@ class FollowRequest private constructor(
     }
 }
 
-data class Follow(
-        val fromUserId: Long,
-        val toUserId: Long,
-        val followedAt: String
-)
+class Follow(
+        _fromUserId: String,
+        _toUserId: String,
+        _followedAt: String
+) {
+    val fromUserId: Long = _fromUserId.toLong()
+    val toUserId: Long = _toUserId.toLong()
+    val followedAt: LocalDateTime by lazy {
+        LocalDateTime.ofInstant(ZonedDateTime.parse(_followedAt).toInstant(), ZoneId.systemDefault())
+    }
+}
 
 data class FollowResponse(
         val total: Long,

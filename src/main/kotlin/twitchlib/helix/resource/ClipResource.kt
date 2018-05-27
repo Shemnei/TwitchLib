@@ -4,6 +4,10 @@ import org.json.JSONArray
 import org.json.JSONObject
 import twitchlib.helix.HelixClient
 import java.net.URL
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.util.*
 
 class ClipResource(
         private val client: HelixClient
@@ -39,16 +43,19 @@ class ClipResource(
             val id = d.getString("id")
             val url = d.getString("url")
             val embedUrl = d.getString("embed_url")
-            val broadcasterId = d.getString("broadcaster_id").toLong()
-            val creatorId = d.getString("creator_id").toLong()
+            val broadcasterId = d.getString("broadcaster_id")
+            val creatorId = d.getString("creator_id")
             val videoId = d.getString("video_id")
-            val gameId = d.getString("game_id").toLong()
+            val gameId = d.getString("game_id")
             val language = d.getString("language")
             val title = d.getString("title")
             val viewCount = d.getLong("view_count")
             val createdAt = d.getString("created_at")
             val thumbnailUrl = d.getString("thumbnail_url")
-            Clip(id, url, embedUrl, broadcasterId, creatorId, if (videoId.isBlank()) null else videoId.toLong(), gameId, language, title, viewCount, createdAt, thumbnailUrl)
+            Clip(
+                    id, url, embedUrl, broadcasterId, creatorId, videoId,
+                    gameId, language, title, viewCount, createdAt, thumbnailUrl
+            )
         }
     }
 
@@ -87,20 +94,29 @@ class ClipRequest private constructor(
     }
 }
 
-data class Clip(
+class Clip(
         val id: String,
         val url: String,
         val embedUrl: String,
-        val broadcasterId: Long,
-        val creatorId: Long,
-        val videoId: Long?,
-        val gameId: Long,
-        val language: String,
+        _broadcasterId: String,
+        _creatorId: String,
+        _videoId: String,
+        _gameId: String,
+        _language: String,
         val title: String,
         val viewCount: Long,
-        val createdAt: String,
+        _createdAt: String,
         val thumbnailUrl: String
-)
+) {
+    val broadcasterId: Long = _broadcasterId.toLong()
+    val creatorId: Long = _creatorId.toLong()
+    val videoId: Long? = if (_videoId.isBlank()) null else _videoId.toLong()
+    val gameId: Long = _gameId.toLong()
+    val language: Locale by lazy { Locale(_language) }
+    val createdAt: LocalDateTime by lazy {
+        LocalDateTime.ofInstant(ZonedDateTime.parse(_createdAt).toInstant(), ZoneId.systemDefault())
+    }
+}
 
 data class ClipResponse(
         val clips: List<Clip>,

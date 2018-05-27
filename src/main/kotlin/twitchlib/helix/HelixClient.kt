@@ -5,7 +5,6 @@ import twitchlib.helix.resource.*
 import java.io.InputStream
 import java.net.URL
 import java.time.LocalDateTime
-import java.util.*
 import javax.net.ssl.HttpsURLConnection
 
 
@@ -29,8 +28,6 @@ class HelixClient(
         val conn = url.openConnection() as HttpsURLConnection
         conn.setRequestProperty("Authorization", "Bearer ${token.first}")
         conn.requestMethod = method.name
-
-        conn.headerFields.forEach { t, u -> println(t + "->" + Arrays.toString(u.toTypedArray())) }
 
         return String((conn.content as InputStream).buffered().readAllBytes())
     }

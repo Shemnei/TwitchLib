@@ -19,5 +19,8 @@ HELIX:
 
     Handle Ratelimit Headers
     Request/Respones unify List/Array
+    add/modify request methods to not use varags
     maybe unify names
     StreamMetadata / Entitlement
+
+PUBSUB?

@@ -19,7 +19,7 @@ class UserResource(
     private fun parseUsers(data: JSONArray): List<User> {
         return data.map {
             val d = it as JSONObject
-            val id = d.getString("id").toLong()
+            val id = d.getString("id")
             val login = d.getString("login")
             val displayName = d.getString("display_name")
             val type = d.getString("type")
@@ -69,8 +69,8 @@ class UserRequest private constructor(
     }
 }
 
-data class User(
-        val id: Long,
+class User(
+        _id: String,
         val login: String,
         val displayName: String,
         val type: String,
@@ -79,4 +79,6 @@ data class User(
         val profileImageUrl: String,
         val offlineImageUrl: String,
         val view_count: Long
-)
+) {
+    val id: Long = _id.toLong()
+}

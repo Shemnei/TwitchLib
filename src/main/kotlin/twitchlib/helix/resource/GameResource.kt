@@ -36,7 +36,7 @@ class GameResource(
     private fun parseGames(data: JSONArray): List<Game> {
         return data.map {
             val d = it as JSONObject
-            val id = d.getString("id").toLong()
+            val id = d.getString("id")
             val name = d.getString("name")
             val boxArtUrl = d.getString("box_art_url")
             Game(id, name, boxArtUrl)
@@ -59,9 +59,9 @@ class GameRequest private constructor(
     val query: String by lazy {
         val idStrings = mutableListOf<String>()
         if (ids.isNotEmpty())
-            idStrings.add("id=" + ids.joinToString("%20"))
+            idStrings.add(ids.joinToString("&id=", prefix = "id="))
         if (names.isNotEmpty())
-            idStrings.add("name=" + names.joinToString("%20"))
+            idStrings.add(names.joinToString("&name=", prefix = "name="))
         idStrings.joinToString("&")
     }
 
@@ -80,11 +80,13 @@ class GameRequest private constructor(
     }
 }
 
-data class Game(
-        val id: Long,
+class Game(
+        _id: String,
         val name: String,
         val boxArtUrl: String
-)
+) {
+    val id: Long = _id.toLong()
+}
 
 data class GameResponse(
         val games: List<Game>,
