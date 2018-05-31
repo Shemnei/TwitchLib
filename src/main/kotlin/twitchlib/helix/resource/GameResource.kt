@@ -1,6 +1,5 @@
 package twitchlib.helix.resource
 
-import org.json.JSONArray
 import org.json.JSONObject
 import twitchlib.helix.HelixClient
 import twitchlib.util.JsonModel

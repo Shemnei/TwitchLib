@@ -1,6 +1,5 @@
 package twitchlib.helix.resource
 
-import org.json.JSONArray
 import org.json.JSONObject
 import twitchlib.helix.HelixClient
 import twitchlib.util.JsonModel
@@ -8,7 +7,6 @@ import twitchlib.util.json
 import twitchlib.util.toSystemDateTime
 import java.net.URL
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.ZonedDateTime
 
 

@@ -1,6 +1,5 @@
 package twitchlib.helix.resource
 
-import org.json.JSONArray
 import org.json.JSONObject
 import twitchlib.helix.HelixClient
 import twitchlib.util.JsonModel
@@ -8,7 +7,6 @@ import twitchlib.util.json
 import twitchlib.util.toSystemDateTime
 import java.net.URL
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -119,7 +117,7 @@ enum class StreamState {
     ONLINE, OFFLINE, ERROR
 }
 
-class Stream(override val root: JSONObject) : JsonModel{
+class Stream(override val root: JSONObject) : JsonModel {
     val id: Long by json { it.toString().toLong() }
     val userId: Long by json("user_id") { it.toString().toLong() }
     val gameId: Long by json("game_id") { it.toString().toLong() }
