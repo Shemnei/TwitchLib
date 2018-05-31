@@ -11,12 +11,33 @@ interface JsonModel {
     val root: JSONObject
 }
 
-fun <T : Any> json(propName: String? = null, transform: ((Any) -> T)? = null) = object : ReadOnlyProperty<JsonModel, T> {
+// use \\ to go into object
+fun <T : Any> json(
+        propName: String? = null,
+        interpretAsPath: Boolean = true,
+        transform: ((Any) -> T)? = null
+) = object : ReadOnlyProperty<JsonModel, T> {
+
     override fun getValue(thisRef: JsonModel, property: KProperty<*>): T {
-        val key: String = propName ?: property.name
-        if (!thisRef.root.has(key))
-            throw IllegalArgumentException("Property[$key] of ${thisRef::class.simpleName}::${property.name} does not exist")
-        val value: Any = thisRef.root.get(key)
+
+        var key: String = propName ?: property.name
+        var currentJObj = thisRef.root
+
+        if (interpretAsPath) {
+            val keyParts: List<String> = (key).split("\\")
+
+            (0..keyParts.size - 2).forEach {
+                key = keyParts[it]
+                if (!currentJObj.has(key))
+                    throw IllegalArgumentException("Property[$key] of ${thisRef::class.simpleName}::${property.name}($key) does not exist")
+                currentJObj = currentJObj.getJSONObject(keyParts[it])
+            }
+            key = keyParts.last()
+        }
+
+        if (!currentJObj.has(key))
+            throw IllegalArgumentException("Property[$key] of ${thisRef::class.simpleName}::${property.name}(\"$key\") does not exist")
+        val value: Any = currentJObj.get(key)
 
         return if (transform != null) {
             transform(value)
