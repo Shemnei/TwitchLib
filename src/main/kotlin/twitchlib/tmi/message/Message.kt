@@ -7,18 +7,18 @@ import java.util.regex.Pattern
 data class Message private constructor(
         val tagCompound: TagCompound?,
         val sender: String,
-        val command: Command,
+        val type: MessageType,
         val receiver: String?,
         val message: String?,
         val raw: String? = null
 ) {
 
     companion object {
-        val msgPattern = Pattern.compile("""^(?:@(?<tags>[^\s]+))?(?:\s?:(?<sender>[^\s!]+)(?:[^ ]+)?)(?:\s(?<command>[^\s]+))(?:\s#?(?<receiver>[^\s]+)(?:\s:?(?<message>.*))?)?""")
+        val msgPattern = Pattern.compile("""^(?:@(?<tags>[^\s]+))?(?:\s?:(?<sender>[^\s!]+)(?:[^ ]+)?)(?:\s(?<type>[^\s]+))(?:\s#?(?<receiver>[^\s]+)(?:\s:?(?<message>.*))?)?""")
 
         fun parse(msg: String): Message {
             if (msg.startsWith("PING :")) {
-                return Message(null, "", Command.PING, null, msg.split(" ")[1].drop(1))
+                return Message(null, "", MessageType.PING, null, msg.split(" ")[1].drop(1))
             }
 
             val matcher = msgPattern.matcher(msg)
@@ -30,10 +30,10 @@ data class Message private constructor(
             val tagString = matcher.group("tags")
             val sender = matcher.group("sender")
             val command = try {
-                Command.getCommand(matcher.group("command"))
+                MessageType.getCommand(matcher.group("type"))
             } catch (e: Exception) {
                 System.err.println("${DateTimeFormatter.ISO_DATE_TIME.format(LocalDateTime.now())} - ${e.message}")
-                Command.PRIVMSG
+                MessageType.PRIVMSG
             }
             val receiver = matcher.group("receiver")
             val message = matcher.group("message")

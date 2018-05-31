@@ -1,5 +1,7 @@
 package twitchlib.tmi
 
+import twitchlib.tmi.message.MessageType
+import twitchlib.tmi.message.Message
 import java.io.BufferedReader
 import java.io.Closeable
 import java.io.PrintWriter
@@ -14,9 +16,9 @@ class IRCConnection(
         val tags: Boolean = true,
         val commands: Boolean = true
 ) : Closeable {
-    lateinit var socket: Socket
-    lateinit var br: BufferedReader
-    lateinit var pw: PrintWriter
+    private lateinit var socket: Socket
+    private lateinit var br: BufferedReader
+    private lateinit var pw: PrintWriter
 
     var connected: Boolean = false
 
@@ -55,9 +57,35 @@ class IRCConnection(
         connected = false
     }
 
-    fun send(raw: String) {
+    // blocking - waits for next message
+    fun recv(): Message {
+        return Message.parse(br.readLine())
+    }
+
+    fun sendRaw(raw: String) {
         if (!connected)
             throw IllegalStateException("IRCConnection is not connected")
         pw.println(raw)
+    }
+
+    fun join(channel: String) {
+        sendRaw("${MessageType.JOIN} #$channel")
+    }
+
+    fun part(channel: String) {
+        sendRaw("${MessageType.PART} #$channel")
+    }
+
+    fun say(channel: String, message: String) {
+        sendRaw("${MessageType.PRIVMSG} #$channel :$message")
+    }
+
+    // could also send to #jtv
+    fun whisper(user: String, message: String) {
+        sendRaw("${MessageType.PRIVMSG} #$user :/w $user $message")
+    }
+
+    fun pong(pingMessage: String = "tmi.twitch.tv") {
+        sendRaw("${MessageType.PONG} :$pingMessage")
     }
 }

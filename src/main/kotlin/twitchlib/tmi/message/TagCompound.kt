@@ -20,6 +20,7 @@ class TagCompound private constructor(
                     }
                     .associate { Tag.getTag(it.first) to if (it.second?.isBlank() == true) null else it.second }
         } catch (e: Exception) {
+            // TODO: 28.05.2018 handle
             System.err.println(raw)
             e.printStackTrace()
             mapOf<Tag, String?>()
@@ -52,9 +53,7 @@ class TagCompound private constructor(
         tags[Tag.BROADCASTER_LANG]?.let { Locale(it) }
     }
 
-    // TODO: 25.05.2018 Maybe replace with own wrapper class
     val color: Color? by lazy {
-        println(tags[Tag.COLOR])
         tags[Tag.COLOR]?.let { Color.valueOf(it) }
     }
 
@@ -62,7 +61,6 @@ class TagCompound private constructor(
         tags[Tag.DISPLAY_NAME]
     }
 
-    // TODO: 25.05.2018 Replace with emote class ?
     // TODO: 25.05.2018 Some Cleanup?
     val emotes: Map<Int, List<IntRange>>? by lazy {
         tags[Tag.EMOTES]
@@ -239,7 +237,10 @@ enum class NoticeType {
     RESUB, SUBGIFT, RAID, RITUAL,
     // system
     ALREADY_BANNED,
-    ALREADY_EMOTE_ONLY_OFF, ALREADY_EMOTE_ONLY_ON, ALREADY_R9K_OFF, ALREADY_R9K_ON, ALREADY_SUBS_OFF, ALREADY_SUBS_ON, BAD_HOST_HOSTING, BAN_SUCCESS, BAD_UNBAN_NO_BAN, EMOTE_ONLY_OFF, EMOTE_ONLY_ON, HOST_OFF, HOST_ON, HOSTS_REMAINING, MSG_CHANNEL_SUSPENDED, R9K_OFF, R9K_ON, SLOW_OFF, SLOW_ON, SUBS_OFF, SUBS_ON, TIMEOUT_SUCCESS, UNBAN_SUCCESS, UNRECOGNIZED_CMD;
+    ALREADY_EMOTE_ONLY_OFF, ALREADY_EMOTE_ONLY_ON, ALREADY_R9K_OFF, ALREADY_R9K_ON, ALREADY_SUBS_OFF,
+    ALREADY_SUBS_ON, BAD_HOST_HOSTING, BAN_SUCCESS, BAD_UNBAN_NO_BAN, EMOTE_ONLY_OFF, EMOTE_ONLY_ON,
+    HOST_OFF, HOST_ON, HOSTS_REMAINING, MSG_CHANNEL_SUSPENDED, R9K_OFF, R9K_ON, SLOW_OFF, SLOW_ON,
+    SUBS_OFF, SUBS_ON, TIMEOUT_SUCCESS, UNBAN_SUCCESS, UNRECOGNIZED_CMD, UNSUPPORTED_CHATROOMS_CMD;
 }
 
 enum class UserType {

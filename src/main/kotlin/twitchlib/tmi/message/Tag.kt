@@ -4,7 +4,6 @@ package twitchlib.tmi.message
  * Created on 05.03.18.
  */
 
-// TODO: 25.05.2018 Add https://dev.twitch.tv/docs/irc/commands/
 enum class Tag {
     BADGES,
     BAN_DURATION,

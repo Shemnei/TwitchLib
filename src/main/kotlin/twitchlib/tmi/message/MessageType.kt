@@ -4,7 +4,7 @@ package twitchlib.tmi.message
  * Created on 05.03.18.
  */
 
-enum class Command {
+enum class MessageType {
     PING,
     PONG,
 
@@ -19,6 +19,8 @@ enum class Command {
     _372,
     _375,
     _376,
+
+    _421,
 
     JOIN,
     PART,
@@ -39,9 +41,9 @@ enum class Command {
 
     companion object {
         val numberRegex = Regex("""[0-9]+""")
-        fun getCommand(cmd: String): Command {
+        fun getCommand(cmd: String): MessageType {
             val pre = if (cmd.matches(numberRegex)) "_" else ""
-            return Command.valueOf(pre + cmd)
+            return MessageType.valueOf(pre + cmd)
         }
     }
 }
