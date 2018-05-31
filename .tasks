@@ -24,3 +24,11 @@ HELIX:
     StreamMetadata / Entitlement
 
 PUBSUB?
+
+http://tmi.twitch.tv/group/user/CHANNEL/chatters
+
+IRC Limitations:
+    20 messages per 30sek -- global
+    100 messages when modded -- global
+    50 char message limit
+    500 char message limit when modded

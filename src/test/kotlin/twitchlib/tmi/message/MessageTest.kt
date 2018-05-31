@@ -24,8 +24,8 @@ internal class MessageTest {
         // sender
         assertEquals("tmi.twitch.tv", m.sender)
 
-        // command
-        assertEquals(Command.CLEARCHAT, m.command)
+        // type
+        assertEquals(MessageType.CLEARCHAT, m.type)
 
         // receiver
         assertNotNull(m.receiver)
@@ -44,7 +44,7 @@ internal class MessageTest {
         assertEquals(6, m.tagCompound!!.tags.size)
         // color
         assertNotNull(m.tagCompound!!.color)
-        assertEquals(Color.valueOf("#0D4200"), m.tagCompound!!.color)
+        assertEquals(Color.rgb(13, 66, 0), m.tagCompound!!.color)
         // display name
         assertNotNull(m.tagCompound!!.displayName)
         assertEquals("dallas", m.tagCompound!!.displayName)
@@ -75,7 +75,7 @@ internal class MessageTest {
         assertTrue(m.tagCompound!!.badges!!.contains(Pair(Badge.TURBO, 1)))
         // color
         assertNotNull(m.tagCompound!!.color)
-        assertEquals(Color.valueOf("#0D4200"), m.tagCompound!!.color)
+        assertEquals(Color.rgb(13, 66, 0), m.tagCompound!!.color)
         // display name
         assertNotNull(m.tagCompound!!.displayName)
         assertEquals("dallas", m.tagCompound!!.displayName)
@@ -114,8 +114,8 @@ internal class MessageTest {
         // sender
         assertEquals("ronni", m.sender)
 
-        // command
-        assertEquals(Command.PRIVMSG, m.command)
+        // type
+        assertEquals(MessageType.PRIVMSG, m.type)
 
         // receiver
         assertNotNull(m.receiver)
@@ -175,8 +175,8 @@ internal class MessageTest {
         // sender
         assertEquals("ronni", m.sender)
 
-        // command
-        assertEquals(Command.PRIVMSG, m.command)
+        // type
+        assertEquals(MessageType.PRIVMSG, m.type)
 
         // receiver
         assertNotNull(m.receiver)
@@ -209,8 +209,8 @@ internal class MessageTest {
         // sender
         assertEquals("tmi.twitch.tv", m.sender)
 
-        // command
-        assertEquals(Command.ROOMSTATE, m.command)
+        // type
+        assertEquals(MessageType.ROOMSTATE, m.type)
 
         // receiver
         assertNotNull(m.receiver)
@@ -251,8 +251,8 @@ internal class MessageTest {
         // sender
         assertEquals("tmi.twitch.tv", m.sender)
 
-        // command
-        assertEquals(Command.USERNOTICE, m.command)
+        // type
+        assertEquals(MessageType.USERNOTICE, m.type)
 
         // receiver
         assertNotNull(m.receiver)
@@ -297,8 +297,8 @@ internal class MessageTest {
         // sender
         assertEquals("tmi.twitch.tv", m.sender)
 
-        // command
-        assertEquals(Command.USERNOTICE, m.command)
+        // type
+        assertEquals(MessageType.USERNOTICE, m.type)
 
         // receiver
         assertNotNull(m.receiver)
@@ -327,8 +327,8 @@ internal class MessageTest {
         // sender
         assertEquals("tmi.twitch.tv", m.sender)
 
-        // command
-        assertEquals(Command.USERNOTICE, m.command)
+        // type
+        assertEquals(MessageType.USERNOTICE, m.type)
 
         // receiver
         assertNotNull(m.receiver)
@@ -343,7 +343,7 @@ internal class MessageTest {
         assertEquals(7, m.tagCompound!!.tags.size)
         // color
         assertNotNull(m.tagCompound!!.color)
-        assertEquals(Color.valueOf("#0D4200"), m.tagCompound!!.color)
+        assertEquals(Color.rgb(13, 66, 0), m.tagCompound!!.color)
         // display name
         assertNotNull(m.tagCompound!!.displayName)
         assertEquals("ronni", m.tagCompound!!.displayName)
@@ -373,8 +373,8 @@ internal class MessageTest {
         // sender
         assertEquals("tmi.twitch.tv", m.sender)
 
-        // command
-        assertEquals(Command.HOSTTARGET, m.command)
+        // type
+        assertEquals(MessageType.HOSTTARGET, m.type)
 
         // receiver
         assertNotNull(m.receiver)
@@ -394,8 +394,8 @@ internal class MessageTest {
         // sender
         assertEquals("tmi.twitch.tv", m.sender)
 
-        // command
-        assertEquals(Command.HOSTTARGET, m.command)
+        // type
+        assertEquals(MessageType.HOSTTARGET, m.type)
 
         // receiver
         assertNotNull(m.receiver)
@@ -419,8 +419,8 @@ internal class MessageTest {
         // sender
         assertEquals("tmi.twitch.tv", m.sender)
 
-        // command
-        assertEquals(Command.NOTICE, m.command)
+        // type
+        assertEquals(MessageType.NOTICE, m.type)
 
         // receiver
         assertNotNull(m.receiver)
@@ -441,8 +441,8 @@ internal class MessageTest {
         // sender
         assertEquals("tmi.twitch.tv", m.sender)
 
-        // command
-        assertEquals(Command.RECONNECT, m.command)
+        // type
+        assertEquals(MessageType.RECONNECT, m.type)
     }
 
     @Test
@@ -454,8 +454,8 @@ internal class MessageTest {
         // sender
         assertEquals("ronni", m.sender)
 
-        // command
-        assertEquals(Command.JOIN, m.command)
+        // type
+        assertEquals(MessageType.JOIN, m.type)
 
         // receiver
         assertNotNull(m.receiver)
@@ -471,8 +471,8 @@ internal class MessageTest {
         // sender
         assertTrue(m.sender.isEmpty())
 
-        // command
-        assertEquals(Command.PING, m.command)
+        // type
+        assertEquals(MessageType.PING, m.type)
 
         // receiver
         assertNull(m.receiver)
@@ -485,36 +485,36 @@ internal class MessageTest {
     @Test
     fun testParseCONNECTIONMessage() {
         var m = Message.parse(":tmi.twitch.tv 001 <user> :Welcome, GLHF!")
-        // command
-        assertEquals(Command._001, m.command)
+        // type
+        assertEquals(MessageType._001, m.type)
 
         // receiver
         assertNotNull(m.receiver)
         assertEquals("<user>", m.receiver)
 
         m = Message.parse(":tmi.twitch.tv 002 <user> :Your host is tmi.twitch.tv")
-        // command
-        assertEquals(Command._002, m.command)
+        // type
+        assertEquals(MessageType._002, m.type)
 
         m = Message.parse(":tmi.twitch.tv 003 <user> :This server is rather new")
-        // command
-        assertEquals(Command._003, m.command)
+        // type
+        assertEquals(MessageType._003, m.type)
 
         m = Message.parse(":tmi.twitch.tv 004 <user> :-")
-        // command
-        assertEquals(Command._004, m.command)
+        // type
+        assertEquals(MessageType._004, m.type)
 
         m = Message.parse(":tmi.twitch.tv 375 <user> :-")
-        // command
-        assertEquals(Command._375, m.command)
+        // type
+        assertEquals(MessageType._375, m.type)
 
         m = Message.parse(":tmi.twitch.tv 372 <user> :You are in a maze of twisty passages.")
-        // command
-        assertEquals(Command._372, m.command)
+        // type
+        assertEquals(MessageType._372, m.type)
 
         m = Message.parse(":tmi.twitch.tv 376 <user> :>")
-        // command
-        assertEquals(Command._376, m.command)
+        // type
+        assertEquals(MessageType._376, m.type)
     }
 
 }

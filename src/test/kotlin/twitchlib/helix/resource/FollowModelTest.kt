@@ -1,14 +1,11 @@
 package twitchlib.helix.resource
 
 import org.json.JSONObject
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
-import twitchlib.util.toSystemDateTime
 import twitchlib.util.utcToDefault
 import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.util.*
 
 internal class FollowModelTest {
 
