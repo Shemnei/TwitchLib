@@ -33,7 +33,7 @@ class TagCompound private constructor(
                 ?.filter { !it.isBlank() }
                 ?.map {
                     val split = it.split("/")
-                    Pair(Badge.valueOf(split.first().toUpperCase()), split.getOrNull(1)?.toInt() ?: 0)
+                    Pair(Badge.getBadge(split.first()), split.getOrNull(1)?.toInt() ?: 0)
                 }
     }
 
@@ -98,7 +98,7 @@ class TagCompound private constructor(
     }
 
     val msgId: NoticeType? by lazy {
-        tags[Tag.MSG_ID]?.let { NoticeType.valueOf(it.toUpperCase()) }
+        tags[Tag.MSG_ID]?.let { NoticeType.getNoticeType(it) }
     }
 
     val r9k: Boolean? by lazy {
@@ -171,9 +171,9 @@ class TagCompound private constructor(
         tags[Tag.MSG_PARAM_RECIPIENT_NAME]
     }
 
-//    val paramRecipientUserName: String? by lazy {
-//        tags[Tag.MSG_PARAM_RECIPIENT_USER_NAME]
-//    }
+    val paramRecipientUserName: String? by lazy {
+        tags[Tag.MSG_PARAM_RECIPIENT_USER_NAME]
+    }
 
     val paramSubPlan: SubPlan? by lazy {
         tags[Tag.MSG_PARAM_SUB_PLAN]?.let { SubPlan.getPlan(it) }
@@ -193,6 +193,18 @@ class TagCompound private constructor(
 
     val paramSenderCount: Int? by lazy {
         tags[Tag.MSG_PARAM_SENDER_COUNT]?.toInt()
+    }
+
+    val paramBitsAmount: Int? by lazy {
+        tags[Tag.MSG_PARAM_BITS_AMOUNT]?.toInt()
+    }
+
+    val paramMinCheerAmount: Int? by lazy {
+        tags[Tag.MSG_PARAM_MIN_CHEER_AMOUNT]?.toInt()
+    }
+
+    val paramSelectedCount: Int? by lazy {
+        tags[Tag.MSG_PARAM_SELECTED_COUNT]?.toInt()
     }
 
     val emoteOnly: Boolean? by lazy {
@@ -228,19 +240,40 @@ class TagCompound private constructor(
 }
 
 enum class Badge {
-    ADMIN, BITS, BROADCASTER, GLOBAL_MOD, MODERATOR, SUBSCRIBER, STAFF, TURBO, PREMIUM
+    ADMIN, BITS, BROADCASTER, GLOBAL_MOD, MODERATOR, SUBSCRIBER,
+    STAFF, TURBO, PREMIUM, PARTNER,
+
+    // Special undocument
+    SUB_GIFTER, CLIP_CHAMP, BATTLERITE_1, OVERWATCH_LEAGUE_INSIDER_1,
+    H1Z1_1, TWITCHCON2017, BRAWLHALLA_1, _60_SECONDS_3, CUPHEAD_1, BITS_LEADER,
+    STARBOUND_1, ANOMALY_WARZONE_EARTH_1;
+
+    companion object {
+        fun getBadge(badge: String): Badge {
+            val normBadge = if (badge.first().isDigit()) "_$badge" else badge
+            return Badge.valueOf(normBadge.toUpperCase().replace("-", "_"))
+        }
+    }
 }
 
 enum class NoticeType {
     // tag
     SUB,
     RESUB, SUBGIFT, RAID, RITUAL,
+    // TODO: 01.06.2018 whats this
+    REWARDGIFT,
     // system
     ALREADY_BANNED,
     ALREADY_EMOTE_ONLY_OFF, ALREADY_EMOTE_ONLY_ON, ALREADY_R9K_OFF, ALREADY_R9K_ON, ALREADY_SUBS_OFF,
     ALREADY_SUBS_ON, BAD_HOST_HOSTING, BAN_SUCCESS, BAD_UNBAN_NO_BAN, EMOTE_ONLY_OFF, EMOTE_ONLY_ON,
     HOST_OFF, HOST_ON, HOSTS_REMAINING, MSG_CHANNEL_SUSPENDED, R9K_OFF, R9K_ON, SLOW_OFF, SLOW_ON,
     SUBS_OFF, SUBS_ON, TIMEOUT_SUCCESS, UNBAN_SUCCESS, UNRECOGNIZED_CMD, UNSUPPORTED_CHATROOMS_CMD;
+
+    companion object {
+        fun getNoticeType(type: String): NoticeType {
+            return NoticeType.valueOf(type.toUpperCase().replace("-", "_"))
+        }
+    }
 }
 
 enum class UserType {
@@ -249,7 +282,7 @@ enum class UserType {
     companion object {
         fun getUserType(type: String): UserType {
             return if (type.isBlank()) EMPTY
-            else valueOf(type.toUpperCase())
+            else valueOf(type.toUpperCase().replace("-", "_"))
         }
     }
 }

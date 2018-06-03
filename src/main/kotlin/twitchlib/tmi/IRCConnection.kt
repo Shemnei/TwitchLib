@@ -1,7 +1,7 @@
 package twitchlib.tmi
 
-import twitchlib.tmi.message.MessageType
 import twitchlib.tmi.message.Message
+import twitchlib.tmi.message.MessageType
 import java.io.BufferedReader
 import java.io.Closeable
 import java.io.PrintWriter
@@ -21,6 +21,7 @@ class IRCConnection(
     private lateinit var pw: PrintWriter
 
     var connected: Boolean = false
+        private set
 
     fun connect(user: String, oauth: String) {
         if (connected)
